@@ -55,6 +55,8 @@ def downsample_old(trial, new_hz, old_hz):
     return trial
 
 #-------------------------------------------
+#downsample without interpol
+
 #Downsample, old Hz:  1000
 #Downsample, new Hz:  749.8761763249133
 #1000 -> 750Hz: 0.  1.  3.  4.  5.  7.  8.  9. 11. 12. 13. 15. 16. 17. 19.
@@ -68,9 +70,12 @@ def downsample(trial, new_hz, old_hz):
     #    np.savetxt(f"ETRA_500Hz_subj {trial['subj']}_stim {trial['stim'][-10:]}_y.csv", list(zip(trial['timestep'], trial['y'])), delimiter=',')
     #########
     step = 1000/new_hz                                      # hier darf man nicht runden! Sonst machen wir wieder nur 1, 2, ... Schritte
-    #FIFA: max_timestep = trial['timestep'][-1]
-    #if type(trial['timestep']) #TODO continue
-    max_timestep = trial['timestep'].iloc[-1]
+    #FIFA & MIT 
+    if type(trial['timestep']) is np.ndarray:
+        max_timestep = trial['timestep'][-1]
+    #ETRA, series
+    elif type(trial['timestep']) is pd.core.series.Series:
+        max_timestep = trial['timestep'].iloc[-1]
     new_timesteps = np.arange(0, max_timestep, step)
     new_timesteps = new_timesteps.round().astype(int)
  
@@ -101,10 +106,15 @@ def downsample(trial, new_hz, old_hz):
 
 #downsample with interpol
 #1000Hz -> 30Hz ->  0. 33.33333333 66.66666667 100. 133.33 ... 2000.
-def downsample(trial, new_hz, old_hz):
+def downsample_b(trial, new_hz, old_hz):
     step = 1000/new_hz                                     
-    #FIFA: max_timestep = trial['timestep'][-1]
-    max_timestep = trial['timestep'].iloc[-1]
+    #FIFA & MIT 
+    if type(trial['timestep']) is np.ndarray:
+        max_timestep = trial['timestep'][-1]
+    #ETRA, series
+    elif type(trial['timestep']) is pd.core.series.Series:
+        max_timestep = trial['timestep'].iloc[-1]
+
     new_timesteps = np.arange(0, max_timestep, step)
     
     interpol_values_x = interp1d(trial.timestep, trial.x.reshape(1, -1), kind='cubic')(new_timesteps).reshape(-1)
@@ -115,10 +125,10 @@ def downsample(trial, new_hz, old_hz):
     trial.y = interpol_values_y
 
     #########For the comparison, type(trial['x'] -> np array
-    if trial['subj'] == '062' and trial['stim'] == 'WALDO/wal003.bmp':
-        np.savetxt(f"ETRA_500Hz_to_30Hz_Downsample_w_interpol_cubic_subj {trial['subj']}_stim {trial['stim'][-10:]}_x.csv", list(zip(trial['timestep'], trial['x'])), delimiter=',')
-        np.savetxt(f"ETRA_500Hz_to_30Hz_Downsample_w_interpol_cubic_subj {trial['subj']}_stim {trial['stim'][-10:]}_y.csv", list(zip(trial['timestep'], trial['y'])), delimiter=',')
-        exit()
+    #if trial['subj'] == '062' and trial['stim'] == 'WALDO/wal003.bmp':
+    #    np.savetxt(f"ETRA_500Hz_to_30Hz_Downsample_w_interpol_cubic_subj {trial['subj']}_stim {trial['stim'][-10:]}_x.csv", list(zip(trial['timestep'], trial['x'])), delimiter=',')
+    #    np.savetxt(f"ETRA_500Hz_to_30Hz_Downsample_w_interpol_cubic_subj {trial['subj']}_stim {trial['stim'][-10:]}_y.csv", list(zip(trial['timestep'], trial['y'])), delimiter=',')
+    #    exit()
     #####################
     
     return trial
@@ -128,24 +138,29 @@ def upsample(trial, new_hz, old_hz):
     #print('In upsample'.upper())
 
     ########################################for comparison
-    folder1 = 'Downsample_Comparison'
-    folder2 = 'ETRA_500Hz_subj 009_stim nat004.bmp'
-    filex = 'ETRA_500Hz_to_30Hz_Downsample_w_interpol_linear_subj 009_stim nat004.bmp_x.csv'
-    filey = 'ETRA_500Hz_to_30Hz_Downsample_w_interpol_linear_subj 009_stim nat004.bmp_y.csv'
-    x = np.loadtxt(f"{folder1}/{folder2}/{filex}", delimiter=',')
-    x = np.transpose(x)
-    trial.x = x[1]
+    #folder1 = 'Downsample_Comparison'
+    #folder2 = 'ETRA_500Hz_subj 009_stim nat004.bmp'
+    #filex = 'ETRA_500Hz_to_30Hz_Downsample_w_interpol_linear_subj 009_stim nat004.bmp_x.csv'
+    #filey = 'ETRA_500Hz_to_30Hz_Downsample_w_interpol_linear_subj 009_stim nat004.bmp_y.csv'
+    #x = np.loadtxt(f"{folder1}/{folder2}/{filex}", delimiter=',')
+    #x = np.transpose(x)
+    #trial.x = x[1]
     #print(trial.x[:10])
-    y = np.loadtxt(f"{folder1}/{folder2}/{filey}", delimiter=',')
-    y = np.transpose(y)
-    trial.y = y[1]
+    #y = np.loadtxt(f"{folder1}/{folder2}/{filey}", delimiter=',')
+    #y = np.transpose(y)
+    #trial.y = y[1]
     #print(trial.y[:10])
-    trial.timestep = x[0]
-    new_hz = 500               #!WICHTIG
+    #trial.timestep = x[0]
+    #new_hz = 500               #!WICHTIG
     ########################################
 
     step = 1000/new_hz                                     
-    max_timestep = trial['timestep'][-1]
+    #FIFA & MIT 
+    if type(trial['timestep']) is np.ndarray:
+        max_timestep = trial['timestep'][-1]
+    #ETRA, series
+    elif type(trial['timestep']) is pd.core.series.Series:
+        max_timestep = trial['timestep'].iloc[-1]
     new_timesteps = np.arange(0, max_timestep, step)
 
     interpol_values_x = interp1d(trial.timestep, trial.x.reshape(1, -1), kind='cubic')(new_timesteps).reshape(-1)
@@ -158,8 +173,8 @@ def upsample(trial, new_hz, old_hz):
     # trial.timestep[40] = 33.33 -> value: 0.47371575 -> old value at timestep 33.33 = 0.47320688
     # last value new: 0.76853863, old: 0.76855228    
     
-    np.savetxt(f"ETRA_30Hz_wIntLin_to_500Hz_Upsample_w_interpol_cubic_subj 009_stim nat004.bmp_x.csv", list(zip(trial['timestep'], trial['x'])), delimiter=',')
-    np.savetxt(f"ETRA_30Hz_wIntLin_to_500Hz_Upsample_w_interpol_cubic_subj 009_stim nat004.bmp_y.csv", list(zip(trial['timestep'], trial['y'])), delimiter=',')
+    #np.savetxt(f"ETRA_30Hz_wIntLin_to_500Hz_Upsample_w_interpol_cubic_subj 009_stim nat004.bmp_x.csv", list(zip(trial['timestep'], trial['x'])), delimiter=',')
+    #np.savetxt(f"ETRA_30Hz_wIntLin_to_500Hz_Upsample_w_interpol_cubic_subj 009_stim nat004.bmp_y.csv", list(zip(trial['timestep'], trial['y'])), delimiter=',')
      
     
     '''
@@ -170,7 +185,7 @@ def upsample(trial, new_hz, old_hz):
     newHz = (1/diff) * 1000
     print(newHz)
     '''
-    exit()
+    #exit()
     
     return trial
 

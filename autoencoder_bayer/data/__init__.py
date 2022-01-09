@@ -3,16 +3,16 @@ from .datasets import *
 
 
 CORPUS_LIST = {
-    #'Cerf2007-FIFA': Cerf2007_FIFA,
-    #'ETRA2019': ETRA2019,
+    'Cerf2007-FIFA': Cerf2007_FIFA,
+    'ETRA2019': ETRA2019,
     'MIT-LowRes': MIT_LowRes,
 }
 #'EMVIC2014': EMVIC2014,
 
 frequencies = {
     250: ['MIT-LowRes'],
-    #1000: ['Cerf2007-FIFA'],
-    #500: ['ETRA2019'],
+    1000: ['Cerf2007-FIFA'],
+    500: ['ETRA2019'],
     # the ones from MIT are 240Hz but oh well  
 }
 #1000: ['EMVIC2014', 'Cerf2007-FIFA'], 

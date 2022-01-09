@@ -197,4 +197,30 @@ def upsample(trial, new_hz, old_hz):
     
     #FIFA############################################################################
 
+
+    # was in corpusData
+    def mean_duration_between_samples(self, values):
+        #print(type(values.values))  #numpy.ndarray
+        if type(values) == np.ndarray:
+            df = pd.DataFrame(values, columns= ['vals'])            #FIFA
+        else:
+            df = pd.DataFrame(values.values, columns= ['vals'])     #ETRA
+        #print('DATAFRAME: ', '\n', df)
+        temp = df[df.columns[0]]
+        diff = temp.diff().mean()
+        
+        #print('DIFF: ', diff)      #Always 2 for ETRA
+        return diff
+
+
+    def sampling_rate(self):
+        #print('Calculate samling freq. manually')
+        for subj in self.time:
+            for trial, values in self.time[subj].items():
+                meanTimeBetweenSamples = self.mean_duration_between_samples(values)
+                timeBetweenSamples = (1/meanTimeBetweenSamples) * 1000
+                if timeBetweenSamples != self.hz:
+                    print('The calculated sampling frequency in subject ', subj, 'and trial ', trial, 'differs from the given frequency ', self.hz)
+                    print('Calculated sampling frequency: ', timeBetweenSamples)
+
 '''

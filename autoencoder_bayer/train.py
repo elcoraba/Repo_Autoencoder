@@ -37,7 +37,7 @@ class Trainer:
         #self._init_evaluator()
 
     def _load_data(self):
-        #get_corpora: just add Datasets, which are higher than the given hz freq (args.hz)
+        #TODO get_corpora: just add Datasets, which are higher than the given hz freq (args.hz)
         self.dataset = SignalDataset(get_corpora(args), args,
                                      caller='trainer')
         #print(dir(self.dataset.train_set))

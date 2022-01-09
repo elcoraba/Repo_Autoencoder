@@ -5,7 +5,7 @@ from torch.nn.modules.conv import Conv1d
 
 class ResidualBlock(nn.Module):
     # kernel_size = 3, stride = 1
-    def __init__(self, nInput, nHidden, nOutput, dilations, kernel_size, causal, downsample = 0, no_skip_connections = False):
+    def __init__(self, nInput, nHidden, nOutput, dilations, kernel_size, causal, downsample = 0, no_skip_connections = False, no_bn2 = False):
         super(ResidualBlock,self).__init__()
 
         # variables
@@ -14,16 +14,19 @@ class ResidualBlock(nn.Module):
         self.causal = causal
 
         # layers
-        self.relu = nn.RelU()
+        self.relu = nn.ReLU()
 
         self.conv1 = self.build_conv_layer(nInput, nHidden, dilations[0])
         self.bn1 = nn.BatchNorm1d(nHidden)
 
         self.conv2 = self.build_conv_layer(nHidden, nOutput, dilations[1])
-        self.bn2 = nn.BatchNorm1d(nOutput) # I erased variable no_bn2 which they use for a query
+        if no_bn2:
+            self.bn2 = None
+        else:
+            self.bn2 = nn.BatchNorm1d(nOutput)
 
         if no_skip_connections:
-            None
+            self.skip_conv = None
         else:
             self.skip_conv = nn.Conv1d(nInput, nOutput, 1) #Skip Conv is added to output of ResidualBlock (later). Conv is used to reduce the size properly
 
@@ -66,13 +69,33 @@ class ResidualBlock(nn.Module):
             out = out + self.skip_conv(x)
         
         out = self.relu(out)
-        out = self.bn2(out) # GazeMAE did a if here, but do we really need it in any case?
+        if self.bn2 is not None:
+            out = self.bn2(out)
  
         # keep it in, as we perhaps add downsampling, GazeMAE didn't use it
         if self.downsample is not None:
             out = self.downsample(out)
 
         return out
+
+#------------------------------------------------------------------------------------------------
+class CausalBlock(ResidualBlock): #TODO eher DecoderBlock?
+    def forward(self, x, representation=None):
+        out = self.conv1(x)
+        if representation is not None:
+            out = out + representation.unsqueeze(-1) #Macro/Micro scale rep
+        out = self.relu(out)
+        out = self.bn1(out)
+
+        out = self.conv2(out)
+        if self.skip_conv is not None: 
+            out = out + self.skip_conv(x) # Skip connection
+        out = self.relu(out)
+        if self.bn2 is not None:
+            out = self.bn2(out)
+
+        return out
+
 
 
 

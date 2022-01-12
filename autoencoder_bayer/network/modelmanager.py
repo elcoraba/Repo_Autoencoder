@@ -83,13 +83,14 @@ class ModelManager:
             "pos or vel"    : args.signal_type,               
             "lr"            : args.learning_rate,
             "hz"            : args.hz,
-            "viewing time"  : args.vt,
-            "last loss"     : losses[-1],
+            "viewing time"  : args.viewing_time,
+            "bs"            : args.batch_size,      #I added
+            "last loss"     : list(losses)[-1],     #before: losses[-1],
             "current day"   : date.today().strftime("%d.%m.%Y"),
             "current time"  : datetime.now().strftime("%H:%M:%S")
         }
 
-        jsonFile = json.dump(params)
+        jsonFile = json.dumps(params) #was .dump()
 
         with open(model_filename, 'w') as jasonfile: # function opens a file, and returns it as a file object., Write - Opens a file for writing, creates the file if it does not exist
             jasonfile.write(jsonFile)

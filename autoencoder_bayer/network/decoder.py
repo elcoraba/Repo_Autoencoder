@@ -1,5 +1,5 @@
 from numpy import random
-from torch import nn, cat, zeros
+from torch import nn, cat, zeros, cuda, device
 
 from network.residualblock import CausalBlock
 
@@ -9,6 +9,8 @@ random.seed(RAND_SEED)
 class Decoder(nn.Module):
     def __init__(self, args, kernel_size, filters, dilations, input_dropout, latent_dim):  
         super(Decoder, self).__init__()
+
+        self.devive = device('cuda' if cuda.is_available() else 'cpu')
 
         self.nInput = 2 
         self.causal = True
@@ -37,7 +39,7 @@ class Decoder(nn.Module):
     def forward(self, z, x_true, is_training):
         # pad the input at its left so there is no leak from input t=1 to
         # output t=1. should be: output for t=1 is dependent on input t=0
-        x = cat((x_true, zeros(x_true.shape[0], 2, 1)), dim=2) # .cuda()
+        x = cat((x_true, zeros(x_true.shape[0], 2, 1).to(self.device)), dim=2).to(self.device) # .cuda()
         # Destroy input - but just during training!
         x = nn.functional.dropout(x, self.input_dropout, is_training)
 

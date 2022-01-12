@@ -44,7 +44,9 @@ class Trainer:
         #print('Load data: ' , '\n' , self.dataset.train_set[0:30])
 
         _loader_params = {'batch_size': args.batch_size, 'shuffle': True,
-                          'pin_memory': True}
+                          'pin_memory': True,
+                          'num_workers': 1,
+                          'persistent_workers': True} #last two are new. #Dataloader should stay for more than one epoch! TODO Exclude hdf5 from dataloader, übergebe hdf5 in dataloader
 
         if len(self.dataset) % args.batch_size == 1:
             _loader_params.update({'drop_last': True})
@@ -117,14 +119,14 @@ class Trainer:
         i, e = 0, 0
         _checkpoint_start = time.time()
         while i < MAX_TRAIN_ITERS: #  20000
-            print('############ i: ', i , '/', MAX_TRAIN_ITERS)
+            #print('############ i: ', i , '/', MAX_TRAIN_ITERS)
             self.reset_epoch_losses()
 
             for b, batch in enumerate(self.dataloader):
-                #print('################# b: ', b )
+                print(i, end = ' ')
                 self.model.network.train()
                 sample, sample_rec = self.forward(batch)
-
+                
                 i += 1
                 if i % _checkpoint_interval == 0:
                     self.update_global_losses(int(i / _checkpoint_interval) - 1)
@@ -133,7 +135,7 @@ class Trainer:
                     self.reset_epoch_losses()
 
                     if (e + 1) % 10 == 0:
-                        self.evaluate_representation(sample, sample_rec, i)
+                        #self.evaluate_representation(sample, sample_rec, i)
                         if self.save_model:
                             self.model.save(i, run_identifier, self.global_losses, args)
 

@@ -48,7 +48,7 @@ def get_parser():
     parser = ArgumentParser()
     #parser.add_argument("-l", "--log-to-file", default=False, action="store_true")
     #parser.add_argument("-v", "--verbose", default=False, action="store_true")
-    parser.add_argument("--save-model", default=False, action="store_true")
+    parser.add_argument("--save-model", default=True, action="store_true")
     parser.add_argument("--tensorboard", default=False, action="store_true")
     # Data Settings
     parser.add_argument("-hz", default=0, type=int)

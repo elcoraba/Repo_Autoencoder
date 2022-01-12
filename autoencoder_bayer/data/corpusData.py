@@ -288,15 +288,31 @@ class EyeTrackingCorpus:
     #Fill holes in dataset before any up/downsampling is done
     def change_in_sampling_freq(self, trial):
         point_pairs = []
+        hole_array = []
         for i in range(len(trial.timestep) - 1):
             if trial.timestep[i] + self.step == trial.timestep[i+1]:
                 continue
             else:
                 point_pairs.append((trial.timestep[i], trial.timestep[i+1]))
         # Were there any holes in the data found? Then do the upsampling
-        if len(point_pairs) > 0:    
+        if len(point_pairs) > 0: 
+            
+            #if trial['subj'] == 'DA' and trial['stim'] == '0219.jpg':
+            #    np.savetxt(f"FIFA_holes_subj {trial['subj']}_stim {trial['stim']}_x.csv", list(zip(trial['timestep'], trial['x'])), delimiter=',')
+            #    np.savetxt(f"FIFA_holes_subj {trial['subj']}_stim {trial['stim']}_y.csv", list(zip(trial['timestep'], trial['y'])), delimiter=',')
+            #    exit()
+
             print('Adapt sampl.freq. ', 'subj: ', trial.subj, 'stim: ', trial.stim)
             trial = du.upsample_between_timestamp_pairs(trial, self.effective_hz, self.hz, point_pairs, self.step) 
+
+            ##### find holes
+            #temp = [trial.subj, trial.stim, point_pairs]
+            #hole_array.append(temp) 
+            #print('Hole Array ', hole_array)
+            # 'WS', '0085.jpg', 'WS', '0065.jpg', 'WS', '0120.jpg', 'WS', '0117.jpg', 'WS', '0077', '0066.jpg'
+            # 'TS', '0122.jpg', '0150.jpg', '0050.jpg'
+            # 'DA', '0034.jpg', '0126.jpg', '0164.jpg', '0200.jpg', '0219.jpg'
+        
         return trial
 
 

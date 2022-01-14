@@ -4,7 +4,7 @@ import logging
 from datetime import datetime
 
 import numpy as np
-from torch import manual_seed, nn, device, cuda
+from torch import manual_seed, nn, device, cuda, multiprocessing
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 
@@ -21,7 +21,7 @@ manual_seed(RAND_SEED)
 
 
 class Trainer:
-    def __init__(self):
+    def __init__(self, args):
         self.model = ModelManager(args)
 
         self.save_model = args.save_model
@@ -31,12 +31,12 @@ class Trainer:
         self.tensorboard = None
 
 
-        self._load_data()
+        self._load_data(args)
         #TODO exit()
         self._init_loss_fn(args)
         #self._init_evaluator()
 
-    def _load_data(self):
+    def _load_data(self, args):
         #TODO get_corpora: just add Datasets, which are higher than the given hz freq (args.hz)
         self.dataset = SignalDataset(get_corpora(args), args,
                                      caller='trainer')
@@ -46,7 +46,7 @@ class Trainer:
         _loader_params = {'batch_size': args.batch_size, 'shuffle': True,
                           'pin_memory': True,
                           'num_workers': 1,
-                          'persistent_workers': True} #last two are new. #Dataloader should stay for more than one epoch! TODO Exclude hdf5 from dataloader, übergebe hdf5 in dataloader
+                          'persistent_workers': True} #last two are new
 
         if len(self.dataset) % args.batch_size == 1:
             _loader_params.update({'drop_last': True})
@@ -105,7 +105,7 @@ class Trainer:
             for l in self._loss_types:
                 self.global_losses[dset][l][checkpoint] = self.epoch_losses[dset][l]
 
-    def train(self):
+    def train(self, args, run_identifier):
         print('################################# Start Training')
         logging.info('\n===== STARTING TRAINING =====')
         logging.info('{} samples, {} batches.'.format(
@@ -231,17 +231,22 @@ class Trainer:
             if val_losses['total'] > 0.00:
                 to_tensorboard('val', val_losses)
 
+def main():
+    args = get_parser().parse_args()
+    run_identifier = args.signal_type                   #TODO datetime.now().strftime('%m%d-%H%M')
+    """
+    setup_logging(args, run_identifier)
+    print_settings()
 
-args = get_parser().parse_args()
-run_identifier = args.signal_type                   #TODO datetime.now().strftime('%m%d-%H%M')
-"""
-setup_logging(args, run_identifier)
-print_settings()
+    logging.info('\nRUN: ' + run_identifier + '\n')
+    logging.info(str(args))
+    """
+    
+    multiprocessing.freeze_support()
 
-logging.info('\nRUN: ' + run_identifier + '\n')
-logging.info(str(args))
-"""
+    trainer = Trainer(args)
+    #exit()
+    trainer.train(args, run_identifier)
 
-trainer = Trainer()
-#exit()
-trainer.train()
+if __name__ == "__main__":
+    main()

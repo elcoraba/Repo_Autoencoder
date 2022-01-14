@@ -10,7 +10,7 @@ class Decoder(nn.Module):
     def __init__(self, args, kernel_size, filters, dilations, input_dropout, latent_dim):  
         super(Decoder, self).__init__()
 
-        self.devive = device('cuda' if cuda.is_available() else 'cpu')
+        self.device = device('cuda' if cuda.is_available() else 'cpu')
 
         self.nInput = 2 
         self.causal = True

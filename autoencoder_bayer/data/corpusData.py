@@ -51,9 +51,14 @@ class EyeTrackingCorpus:
                          'Filename: {}'.format(self.hdf5_fname + '.hdf5'))
 
             if path.exists(self.hdf5_fname + '.hdf5'):
-                hdf5_dataset = h5py.File(self.hdf5_fname + '.hdf5', 'r')['slices']
+                #####Bille: Added because of problems with num_workers, saved hdf5 as .npy
+                if not(path.exists(self.hdf5_fname + '.npy')):
+                    hdf5_dataset = h5py.File(self.hdf5_fname + '.hdf5', 'r')['slices'] #numpy
+                    np.save(self.hdf5_fname + '.npy', hdf5_dataset)
+                hdf5_dataset = np.load(self.hdf5_fname + '.npy')
                 logging.info('Found {} slices'.format(len(hdf5_dataset)))
                 self.data = hdf5_dataset
+                ######
                 return
             else:
                 logging.info('hdf5 file not found.')
@@ -269,6 +274,11 @@ class EyeTrackingCorpus:
 
         logging.info('Saved {} slices to {}'.format(
             len(slices_df), self.hdf5_fname))
+
+        #####Bille: Added because of problems with num_workers, saved hdf5 as .npy
+        np.save(self.hdf5_fname + '.npy', hdf5_dataset)
+        hdf5_dataset = np.load(self.hdf5_fname + '.npy') # 'h5py._hl.dataset.Dataset' -> numpy.ndarray
+        #####
         return hdf5_dataset
 
 ######################################################################NEW###

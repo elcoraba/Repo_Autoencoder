@@ -306,19 +306,17 @@ class EyeTrackingCorpus:
                 point_pairs.append((trial.timestep[i], trial.timestep[i+1]))
         # Were there any holes in the data found? Then do the upsampling
         if len(point_pairs) > 0: 
-            
-            #if trial['subj'] == 'DA' and trial['stim'] == '0219.jpg':
-            #    np.savetxt(f"FIFA_holes_subj {trial['subj']}_stim {trial['stim']}_x.csv", list(zip(trial['timestep'], trial['x'])), delimiter=',')
-            #    np.savetxt(f"FIFA_holes_subj {trial['subj']}_stim {trial['stim']}_y.csv", list(zip(trial['timestep'], trial['y'])), delimiter=',')
-            #    exit()
+            #if trial['subj'] == 'WS' and trial['stim'] == '0117.jpg':
+            #    np.savetxt(f"FIFA_holes_subj {trial['subj']}_stim {trial['stim']}_xy_beforeHoleFilling.csv", list(zip(trial['timestep'], trial['x'], trial['y'])), delimiter=',', header='t,x,y')
+                #np.savetxt(f"FIFA_holes_subj {trial['subj']}_stim {trial['stim']}_y.csv", list(zip(trial['timestep'], trial['y'])), delimiter=',')
+                #exit()
 
             print('Adapt sampl.freq. ', 'subj: ', trial.subj, 'stim: ', trial.stim)
             trial = du.upsample_between_timestamp_pairs(trial, self.effective_hz, self.hz, point_pairs, self.step) 
 
-            ##### find holes
-            #temp = [trial.subj, trial.stim, point_pairs]
-            #hole_array.append(temp) 
-            #print('Hole Array ', hole_array)
+            #if trial['subj'] == 'TS' and trial['stim'] == '0150.jpg':
+            #    np.savetxt(f"FIFA_holes_subj {trial['subj']}_stim {trial['stim']}_xy_afterHoleFilling.csv", list(zip(trial['timestep'], trial['x'], trial['y'])), delimiter=',',header ='t,x,y')
+                
             # 'WS', '0085.jpg', 'WS', '0065.jpg', 'WS', '0120.jpg', 'WS', '0117.jpg', 'WS', '0077', '0066.jpg'
             # 'TS', '0122.jpg', '0150.jpg', '0050.jpg'
             # 'DA', '0034.jpg', '0126.jpg', '0164.jpg', '0200.jpg', '0219.jpg'

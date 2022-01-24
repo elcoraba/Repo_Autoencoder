@@ -39,6 +39,10 @@ SLICE_OVERLAP_RATIO = 0.2
 
 PX_PER_DVA = 35  # pixels per degree of visual angle
 
+#training loop
+TRAIN_NUM_EPOCHS = 1000
+TRAIN_SAVE_LOSS_EVERY_X_BATCHES = 100
+
 #######################################################################################################################
 #Args, arguments that I want to change, depending on the round
 
@@ -49,7 +53,7 @@ def get_parser():
     #parser.add_argument("-l", "--log-to-file", default=False, action="store_true")
     #parser.add_argument("-v", "--verbose", default=False, action="store_true")
     parser.add_argument("--save-model", default=True, action="store_true")
-    parser.add_argument("--tensorboard", default=False, action="store_true")
+    parser.add_argument("--tensorboard", default=True, action="store_true")
     # Data Settings
     parser.add_argument("-hz", default=0, type=int)
     parser.add_argument("-vt", "--viewing-time", help="Cut raw gaze samples to this value (seconds)", default=-1, type=float)
@@ -57,7 +61,7 @@ def get_parser():
     parser.add_argument("--slice-time-windows", default=None, type=str, help="'2s-overlap' or '2s-disjoint'")
     parser.add_argument("--augment", default=False, action="store_true")#?
     # Training Settings
-    parser.add_argument("--use-validation-set", default=False, action="store_true")
+    parser.add_argument("--use-validation-set", default=True, action="store_true")
     parser.add_argument("-bs", "--batch-size", default=64, type=int)
     parser.add_argument("-e", "--epochs", default=200, type=int)
     parser.add_argument("-lr", "--learning-rate", default=5e-4, type=float)

@@ -316,10 +316,6 @@ class EyeTrackingCorpus:
 
             #if trial['subj'] == 'TS' and trial['stim'] == '0150.jpg':
             #    np.savetxt(f"FIFA_holes_subj {trial['subj']}_stim {trial['stim']}_xy_afterHoleFilling.csv", list(zip(trial['timestep'], trial['x'], trial['y'])), delimiter=',',header ='t,x,y')
-                
-            # 'WS', '0085.jpg', 'WS', '0065.jpg', 'WS', '0120.jpg', 'WS', '0117.jpg', 'WS', '0077', '0066.jpg'
-            # 'TS', '0122.jpg', '0150.jpg', '0050.jpg'
-            # 'DA', '0034.jpg', '0126.jpg', '0164.jpg', '0200.jpg', '0219.jpg'
         
         return trial
 

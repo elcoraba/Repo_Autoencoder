@@ -3,6 +3,9 @@
 import logging
 import json
 from datetime import datetime, date
+import numpy as np
+from settings import *
+import csv
 
 import torch
 
@@ -65,11 +68,11 @@ class ModelManager:
                              if p.requires_grad)))
 
     # wird in train aufgerufen
-    def save(self, i, run_identifier, losses, args): 
-        model_filename = '../models/' + run_identifier + '-i' + str(i) #pos-i3738, i = iteration
+    def save(self, e, run_identifier, losses, losses_100, name_run, args): 
+        model_filename = '../models/' + run_identifier + '-e' + str(e) + '-hz' + str(args.hz) #pos-i3738, i = iteration
         torch.save(
             {
-                'iter': i,
+                'epoch': e,
                 'network': self.network,
                 'model_state_dict': self.network.state_dict(), #a dictionary containing a whole state of the module
                 'optimizer_state_dict': self.optim.state_dict(),
@@ -87,10 +90,14 @@ class ModelManager:
             "bs"            : args.batch_size,      #I added
             "last loss"     : list(losses)[-1],     #before: losses[-1],
             "current day"   : date.today().strftime("%d.%m.%Y"),
-            "current time"  : datetime.now().strftime("%H:%M:%S")
+            "current time"  : datetime.now().strftime("%H:%M:%S"),
+            #"epoch losses"  : losses,
+            #"epoch losses 100": losses_100          # losses every 100 batches
         }
 
         jsonFile = json.dumps(params) #was .dump()
 
         with open(model_filename, 'w') as jasonfile: # function opens a file, and returns it as a file object., Write - Opens a file for writing, creates the file if it does not exist
             jasonfile.write(jsonFile)
+
+        

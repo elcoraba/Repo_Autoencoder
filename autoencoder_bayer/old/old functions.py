@@ -223,4 +223,44 @@ def upsample(trial, new_hz, old_hz):
                     print('The calculated sampling frequency in subject ', subj, 'and trial ', trial, 'differs from the given frequency ', self.hz)
                     print('Calculated sampling frequency: ', timeBetweenSamples)
 
+
+#######################old train loop
+def train_old(self, args, run_identifier):
+        print('################################# Start Training')
+        logging.info('\n===== STARTING TRAINING =====')
+        logging.info('{} samples, {} batches.'.format(
+                     len(self.dataset), len(self.dataloader)))
+        logging.info('Loss Fn:' + str(self.loss_fn))
+
+        _checkpoint_interval = len(self.dataloader)
+        num_checkpoints = int(MAX_TRAIN_ITERS / _checkpoint_interval)           #Anzahl der checkpoints
+        self.init_global_losses(num_checkpoints + 1)
+
+        i, e = 0, 0
+        _checkpoint_start = time.time()
+        while i < MAX_TRAIN_ITERS: #  20000
+            #print('############ i: ', i , '/', MAX_TRAIN_ITERS)
+            self.reset_epoch_losses()
+
+            for b, batch in enumerate(self.dataloader):
+                print(i, end = ' ')
+                self.model.network.train()
+                sample, sample_rec = self.forward(batch)
+                
+                i += 1
+                if i % _checkpoint_interval == 0:
+                    self.update_global_losses(int(i / _checkpoint_interval) - 1)
+                    self.log(i, _checkpoint_interval,
+                             time.time() - _checkpoint_start)
+                    self.reset_epoch_losses()
+
+                    if (e + 1) % 10 == 0:
+                        #self.evaluate_representation(sample, sample_rec, i)
+                        if self.save_model:
+                            self.model.save(i, run_identifier, self.global_losses, args)
+
+                    _checkpoint_start = time.time()
+            print('loss per epoch ', self.epoch_losses)
+            e += 1
+
 '''

@@ -91,8 +91,8 @@ class ModelManager:
             "last loss"     : list(losses)[-1],     #before: losses[-1],
             "current day"   : date.today().strftime("%d.%m.%Y"),
             "current time"  : datetime.now().strftime("%H:%M:%S"),
-            #"epoch losses"  : losses,
-            #"epoch losses 100": losses_100          # losses every 100 batches
+            "epoch losses"  : list(losses),
+            "epoch losses 100": list(losses_100)          # losses every 100 batches
         }
 
         jsonFile = json.dumps(params) #was .dump()

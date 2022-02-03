@@ -1,2 +1,7 @@
 autoencoder_bayer/generated-data
 autoencoder_bayer/runs
+autoencoder_bayer/data/GazeBase
+autoencoder_bayer/Downsample_Comparison/
+autoencoder_bayer/FIFA_holes_in_timesteps/
+autoencoder_bayer/Upsample_Comparison/
+models

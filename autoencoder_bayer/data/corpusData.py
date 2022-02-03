@@ -160,6 +160,7 @@ class EyeTrackingCorpus:
 
             return trial
 
+        print('In preprocess data')
         sample_limit = (int(self.hz * self.viewing_time)
                         if self.viewing_time > 0
                         else None)
@@ -187,7 +188,8 @@ class EyeTrackingCorpus:
                 lambda x: np.abs(np.diff(np.stack(x))).T, 1)
             div = self.data[['timestep']].apply(lambda x: np.abs(np.diff(np.stack(x))).T, 1)
             self.data['v'] = self.data['v'].divide(div) # TODO stack und abs entfernen?
-            
+            #TODO Try to scale the velocity values up
+            self.data['v'] = self.data['v'] * 1000           
 
             ####FIFA
             #v: [[0.0, 0.000996946495305795], [0.0005607824036... (3200,0), v[0].shape = (2020,2) (cols, rows)
@@ -314,8 +316,8 @@ class EyeTrackingCorpus:
             print('Adapt sampl.freq. ', 'subj: ', trial.subj, 'stim: ', trial.stim)
             trial = du.upsample_between_timestamp_pairs(trial, self.effective_hz, self.hz, point_pairs, self.step) 
 
-            #if trial['subj'] == 'TS' and trial['stim'] == '0150.jpg':
-            #    np.savetxt(f"FIFA_holes_subj {trial['subj']}_stim {trial['stim']}_xy_afterHoleFilling.csv", list(zip(trial['timestep'], trial['x'], trial['y'])), delimiter=',',header ='t,x,y')
+            #if trial['subj'] == 'DA' and trial['stim'] == '0034.jpg' or trial['subj'] == 'DA' and trial['stim'] == '0126.jpg' or trial['subj'] == 'DA' and trial['stim'] == '0164.jpg' or trial['subj'] == 'DA' and trial['stim'] == '0200.jpg' or trial['subj'] == 'DA' and trial['stim'] == '0219.jpg' or trial['subj'] == 'TS' and trial['stim'] == '0050.jpg' or trial['subj'] == 'TS' and trial['stim'] == '0122.jpg' or trial['subj'] == 'TS' and trial['stim'] == '0150.jpg' or trial['subj'] == 'WS' and trial['stim'] == '0065.jpg' or trial['subj'] == 'WS' and trial['stim'] == '0066.jpg' or trial['subj'] == 'WS' and trial['stim'] == '0077.jpg' or trial['subj'] == 'WS' and trial['stim'] == '0085.jpg' or trial['subj'] == 'WS' and trial['stim'] == '0117.jpg':
+            #    np.savetxt(f"FIFA_holes_subj {trial['subj']}_stim {trial['stim']}_xy_afterHoleFilling_linear.csv", list(zip(trial['timestep'], trial['x'], trial['y'])), delimiter=',',header ='t,x,y')
         
         return trial
 

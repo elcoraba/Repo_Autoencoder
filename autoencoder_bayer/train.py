@@ -165,7 +165,8 @@ class Trainer:
         
             #print(' \n train model')
             self.model.network.train()
-            for b, batch in enumerate(self.dataloader):
+            #for b, batch in enumerate(self.dataloader):
+            for b, batch in enumerate(tqdm(self.dataloader, desc = 'Train Batches')):
                 ###
                 #if b == 0 and e == 0:
                 #    self.tensorboard_train.add_graph(self.model.network, batch)
@@ -175,12 +176,15 @@ class Trainer:
                 #print(e*len(self.dataloader) + b)
 
                 #save running loss 100 and reset it
-                if b % TRAIN_SAVE_LOSS_EVERY_X_BATCHES == 0:#TODO (b+1) better?
+                if (b+1) % TRAIN_SAVE_LOSS_EVERY_X_BATCHES == 0:
                     mean_loss = self.running_loss_100['train']['total'] / TRAIN_SAVE_LOSS_EVERY_X_BATCHES
                     self.global_losses_100['train']['total'][counter_100] = mean_loss                       #e*len(self.dataloader) + b
                     self.tensorboard_train.add_scalar(f"loss_per_{TRAIN_SAVE_LOSS_EVERY_X_BATCHES} batches", mean_loss, counter_100)
                     self.reset_running_loss_100()
                     counter_100 +=1
+
+                    np.savetxt(f"original-batch-train", sample.numpy())
+                    np.savetxt(f"reconstructed-batch-train", sample_rec.detach().numpy())
                 '''
                 if b == 2:
                     break
@@ -195,6 +199,8 @@ class Trainer:
             for b, batch in enumerate(tqdm(self.val_dataloader, desc = 'Val Batches')):
                 # In forward NN also calcs & saves the loss 
                 sample_v, sample_rec_v = self.forward(batch) 
+                np.savetxt(f"original-batch-val", sample_v.numpy())
+                np.savetxt(f"reconstructed-batch-val", sample_rec_v.detach().numpy())
                 
                 #self.tensorboard.add_scalar('val loss', current_val_loss, e*len(self.val_dataloader) + b)
                 '''
@@ -212,9 +218,11 @@ class Trainer:
             _checkpoint_start = time.time()  
 
             # exit train loop, if early stopping says so
+            '''
             stop = self.early_stopping(self.global_losses['val']['total'][e]) #current val loss!
             if stop:
                 break
+            '''
             
 
     def forward(self, batch):

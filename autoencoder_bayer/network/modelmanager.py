@@ -74,7 +74,7 @@ class ModelManager:
             {
                 'epoch': e,
                 'network': self.network,
-                'model_state_dict': self.network.state_dict(), #a dictionary containing a whole state of the module
+                'model_state_dict': self.network.state_dict(), #a dictionary containing a whole state of the module, contains weights
                 'optimizer_state_dict': self.optim.state_dict(),
                 'losses': losses
             }, model_filename)
@@ -82,8 +82,7 @@ class ModelManager:
 
         #save params in extra file
         params = {
-            "iteration"     : run_identifier,
-            "pos or vel"    : args.signal_type,               
+            "pos or vel"    : run_identifier,#args.signal_type,               
             "lr"            : args.learning_rate,
             "hz"            : args.hz,
             "viewing time"  : args.viewing_time,
@@ -97,7 +96,7 @@ class ModelManager:
 
         jsonFile = json.dumps(params) #was .dump()
 
-        with open(model_filename, 'w') as jasonfile: # function opens a file, and returns it as a file object., Write - Opens a file for writing, creates the file if it does not exist
+        with open(model_filename + '.json', 'w') as jasonfile: # function opens a file, and returns it as a file object., Write - Opens a file for writing, creates the file if it does not exist
             jasonfile.write(jsonFile)
 
         

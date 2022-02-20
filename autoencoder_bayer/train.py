@@ -102,8 +102,8 @@ class Trainer:
 
     #saves loss every 100 batches
     def reset_running_loss_100(self):
-        self.running_loss_100 = {'train': {l: 0.0 for l in self._loss_types},
-                             'val': {l: 0.0 for l in self._loss_types}}
+        self.running_loss_100 = {'train': {l: 0.0 for l in self._loss_types}}#,
+                             #'val': {l: 0.0 for l in self._loss_types}}
     
     def init_global_losses_100(self, num_checkpoints):
         self.global_losses_100 = {
@@ -238,11 +238,14 @@ class Trainer:
         loss = self.loss_fn(reconstructed_batch, batch
                             ).reshape(reconstructed_batch.shape[0], -1).sum(-1).mean()
         dset = 'train' if self.model.network.training else 'val'
-        self.running_loss[dset]['total'] += loss.item()  
-        self.running_loss_100[dset]['total'] += loss.item()   
+        self.running_loss[dset]['total'] += loss.item()
+
+        if dset == 'val':
+            print('loss val', loss)    
 
         #update network if we are training
         if self.model.network.training:
+            self.running_loss_100[dset]['total'] += loss.item()
             loss.backward()
             self.model.optim.step()
 
@@ -298,13 +301,15 @@ class Trainer:
                 #to_tensorboard('train', tr_loss)
                 self.tensorboard_train.add_scalar(f'loss_per_epoch', tr_loss, e)
         elif dset == 'val':
+            print('In log ')
+            print('Running loss ', self.running_loss)
             val_losses = get_mean_losses()
             self.global_losses[dset]['total'][e] = val_losses
             self.running_loss[dset]['total'] = 0.0
             #string = '[amount batches {}] VLoss: {:.4f} ({:.2f}s)'.format((e+1)*len(self.val_dataloader), val_losses)
             if self.tensorboard_val:
-                #to_tensorboard('val', val_losses)
-                self.tensorboard_val.add_scalar(f'loss_per_epoch', val_losses, e)
+                print('Mean loss ', val_losses)
+                self.tensorboard_val.add_scalar(tag = f'loss_per_epoch', scalar_value = val_losses, global_step = e)
         #logging.info(string)
 
 

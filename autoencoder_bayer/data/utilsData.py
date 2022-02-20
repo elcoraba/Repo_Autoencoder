@@ -62,12 +62,15 @@ def downsample_old(trial, new_hz, old_hz):
 #1000 -> 750Hz: 0.  1.  3.  4.  5.  7.  8.  9. 11. 12. 13. 15. 16. 17. 19.
 #new Hz: 299.95042141794744
 #1000 -> 300Hz: 0.  3.  7. 10. 13. 17. 20. 23. 27. 30. 33. 37. 40. 43. 47.
-def downsample(trial, new_hz, old_hz):
+def downsample_a(trial, new_hz, old_hz):
     #########For the comparison, type(trial['x'] -> np array
-    #print('In downsample ', trial['stim'])
-    #if trial['subj'] == '022' and trial['stim'] == 'WALDO/wal004.bmp':
-    #    np.savetxt(f"ETRA_500Hz_subj {trial['subj']}_stim {trial['stim'][-10:]}_x.csv", list(zip(trial['timestep'], trial['x'])), delimiter=',')
-    #    np.savetxt(f"ETRA_500Hz_subj {trial['subj']}_stim {trial['stim'][-10:]}_y.csv", list(zip(trial['timestep'], trial['y'])), delimiter=',')
+    print('In downsample WO ', trial['subj'] , ' ', trial['stim'][-10:])
+    #ETRA
+    #if trial['subj'] == '062' and trial['stim'] == 'NATURAL/nat014.bmp':
+    #    np.savetxt(f"ETRA_500Hz_subj ID {trial['subj']}_stim {trial['stim'][-10:]}.csv", list(zip(trial['timestep'], trial['x'], trial['y'])), delimiter=',', header = str('t,x,y'))
+    #FIFA
+    #if trial['subj'] == 'CH' and trial['stim'] == '0001.jpg' or trial['subj'] == 'CH' and trial['stim'] == '0002.jpg' or trial['subj'] == 'CH' and trial['stim'] == '0042.jpg' or trial['subj'] == 'CH' and trial['stim'] == '0055.jpg' or trial['subj'] == 'JV' and trial['stim'] == '0001.jpg' or trial['subj'] == 'JV' and trial['stim'] == '0038.jpg' or trial['subj'] == 'JV' and trial['stim'] == '0113.jpg':
+    #    np.savetxt(f"FIFA_1000Hz_subj ID {trial['subj']}_stim {trial['stim']}.csv", list(zip(trial['timestep'], trial['x'], trial['y'])), delimiter=',', header = 't,x,y')
     #########
     step = 1000/new_hz                                      # hier darf man nicht runden! Sonst machen wir wieder nur 1, 2, ... Schritte
     #FIFA & MIT 
@@ -78,35 +81,52 @@ def downsample(trial, new_hz, old_hz):
         max_timestep = trial['timestep'].iloc[-1]
     new_timesteps = np.arange(0, max_timestep, step)
     new_timesteps = new_timesteps.round().astype(int)
+    
+    # If step size of original data is not 1
+    # example: original hz = 200 -> original step = 5 -> Timesteps: 0, 5, 10 ...
+    # if our new hz = 30 -> new step = 33,33 (rounded = 33) -> Timesteps: 0, 33, 67, 100 ...
+    # As our original data just has data available in 5er steps, it does not contain a 33 timestep, therefore we need to round up resp. down: 33 -> 35, 67 -> 65 ... 
+    step_oldHz = 1000/old_hz
+    mod = new_timesteps % step_oldHz
+    bigger_equal = np.apply_along_axis(lambda a: a >= step_oldHz/2, 0, mod)
+    lower = np.apply_along_axis(lambda a: a < step_oldHz/2, 0, mod)
+    # round up
+    new_timesteps[bigger_equal] = new_timesteps[bigger_equal] + (step_oldHz - mod[bigger_equal]) 
+    # round down
+    new_timesteps[lower] = new_timesteps[lower] - mod[lower]
  
     idx = np.intersect1d(trial.timestep, new_timesteps, return_indices=True)[1]                                               
     trial.timestep = trial.timestep[idx]
     trial.x = trial.x[idx]
     trial.y = trial.y[idx]
-
-    #########For the comparison, type(trial['x'] -> np array
-    #NATURAL/nat014
-    #022, PUZZLE/puz010.bmp
-    #if trial['subj'] == '022' and trial['stim'] == 'WALDO/wal004.bmp':
-    #    np.savetxt(f"ETRA_500Hz_to_30Hz_Downsample_wo_interpol_subj {trial['subj']}_stim {trial['stim'][-10:]}_x.csv", list(zip(trial['timestep'], trial['x'])), delimiter=',')
-    #    np.savetxt(f"ETRA_500Hz_to_30Hz_Downsample_wo_interpol_subj {trial['subj']}_stim {trial['stim'][-10:]}_y.csv", list(zip(trial['timestep'], trial['y'])), delimiter=',')
-    #    exit()
-    #########
-
     ########calculate new sampling freq.
     '''
     print(old_hz)
-    df = pd.DataFrame(new_timesteps, columns= ['vals'])            
+    df = pd.DataFrame(np.array(trial.timestep), columns= ['vals'])            
     temp = df[df.columns[0]]
     diff = temp.diff().mean() 
     newHz = (1/diff) * 1000
     print(newHz)
+    exit()
     '''
+    #########For the comparison, type(trial['x'] -> np array
+    #ETRA
+    #if trial['subj'] == '062' and trial['stim'] == 'WALDO/wal003.bmp' or trial['subj'] == '062' and trial['stim'] == 'NATURAL/nat014.bmp' or trial['subj'] == '022' and trial['stim'] == 'WALDO/wal004.bmp' or trial['subj'] == '022' and trial['stim'] == 'PUZZLE/puz010.bmp' or trial['subj'] == '009' and trial['stim'] == 'PUZZLE/puz013.bmp' or trial['subj'] == '009' and trial['stim'] == 'NATURAL/nat004.bmp':
+    #    np.savetxt(f"ETRA_500Hz_to_30Hz_Downsample_wo_interpol_subj ID {trial['subj']}_stim {trial['stim'][-10:]}.csv", list(zip(trial['timestep'], trial['x'], trial['y'])), delimiter=',', header = str('t,x,y'))
+    #    print('Next')
+        #exit()
+    #FIFA
+    #if trial['subj'] == 'CH' and trial['stim'] == '0001.jpg' or trial['subj'] == 'CH' and trial['stim'] == '0002.jpg' or trial['subj'] == 'CH' and trial['stim'] == '0042.jpg' or trial['subj'] == 'CH' and trial['stim'] == '0055.jpg' or trial['subj'] == 'JV' and trial['stim'] == '0001.jpg' or trial['subj'] == 'JV' and trial['stim'] == '0038.jpg' or trial['subj'] == 'JV' and trial['stim'] == '0113.jpg':
+    #    np.savetxt(f"FIFA_1000Hz_to_30Hz_Downsample_wo_interpol_subj ID {trial['subj']}_stim {trial['stim']}.csv", list(zip(trial['timestep'], trial['x'], trial['y'])), delimiter=',', header = 't,x,y')
+    ##########
+
+   
     return trial
 
 #downsample with interpol
 #1000Hz -> 30Hz ->  0. 33.33333333 66.66666667 100. 133.33 ... 2000.
-def downsample_b(trial, new_hz, old_hz):
+def downsample(trial, new_hz, old_hz):
+    print('Downsample interpol ', trial['subj'] , ' ', trial['stim'])
     step = 1000/new_hz                                     
     #FIFA & MIT 
     if type(trial['timestep']) is np.ndarray:
@@ -117,18 +137,19 @@ def downsample_b(trial, new_hz, old_hz):
 
     new_timesteps = np.arange(0, max_timestep, step)
     
-    interpol_values_x = interp1d(trial.timestep, trial.x.reshape(1, -1), kind='cubic')(new_timesteps).reshape(-1)
-    interpol_values_y = interp1d(trial.timestep, trial.y.reshape(1, -1), kind='cubic')(new_timesteps).reshape(-1)
+    interpol_values_x = interp1d(trial.timestep, trial.x.reshape(1, -1), kind='linear')(new_timesteps).reshape(-1)
+    interpol_values_y = interp1d(trial.timestep, trial.y.reshape(1, -1), kind='linear')(new_timesteps).reshape(-1)
 
     trial.timestep = new_timesteps                                                        
     trial.x = interpol_values_x                                                         
     trial.y = interpol_values_y
 
-    #########For the comparison, type(trial['x'] -> np array
-    #if trial['subj'] == '062' and trial['stim'] == 'WALDO/wal003.bmp':
-    #    np.savetxt(f"ETRA_500Hz_to_30Hz_Downsample_w_interpol_cubic_subj {trial['subj']}_stim {trial['stim'][-10:]}_x.csv", list(zip(trial['timestep'], trial['x'])), delimiter=',')
-    #    np.savetxt(f"ETRA_500Hz_to_30Hz_Downsample_w_interpol_cubic_subj {trial['subj']}_stim {trial['stim'][-10:]}_y.csv", list(zip(trial['timestep'], trial['y'])), delimiter=',')
-    #    exit()
+    #ETRA
+    #if trial['subj'] == '062' and trial['stim'] == 'WALDO/wal003.bmp' or trial['subj'] == '062' and trial['stim'] == 'NATURAL/nat014.bmp' or trial['subj'] == '022' and trial['stim'] == 'WALDO/wal004.bmp' or trial['subj'] == '022' and trial['stim'] == 'PUZZLE/puz010.bmp' or trial['subj'] == '009' and trial['stim'] == 'PUZZLE/puz013.bmp' or trial['subj'] == '009' and trial['stim'] == 'NATURAL/nat004.bmp':
+    #    np.savetxt(f"ETRA_500Hz_to_30Hz_Downsample_w_interpol_linear_subj ID {trial['subj']}_stim {trial['stim'][-10:]}.csv", list(zip(trial['timestep'], trial['x'], trial['y'])), delimiter=',', header = str('t,x,y'))
+    #FIFA
+    #if trial['subj'] == 'CH' and trial['stim'] == '0001.jpg' or trial['subj'] == 'CH' and trial['stim'] == '0002.jpg' or trial['subj'] == 'CH' and trial['stim'] == '0042.jpg' or trial['subj'] == 'CH' and trial['stim'] == '0055.jpg' or trial['subj'] == 'JV' and trial['stim'] == '0001.jpg' or trial['subj'] == 'JV' and trial['stim'] == '0038.jpg' or trial['subj'] == 'JV' and trial['stim'] == '0113.jpg':
+    #    np.savetxt(f"FIFA_1000Hz_to_30Hz_Downsample_w_interpol_cubic_subj ID {trial['subj']}_stim {trial['stim']}.csv", list(zip(trial['timestep'], trial['x'], trial['y'])), delimiter=',', header = 't,x,y')
     #####################
     
     return trial
@@ -138,20 +159,22 @@ def upsample(trial, new_hz, old_hz):
     #print('In upsample'.upper())
 
     ########################################for comparison
-    #folder1 = 'Downsample_Comparison'
-    #folder2 = 'ETRA_500Hz_subj 009_stim nat004.bmp'
-    #filex = 'ETRA_500Hz_to_30Hz_Downsample_w_interpol_linear_subj 009_stim nat004.bmp_x.csv'
-    #filey = 'ETRA_500Hz_to_30Hz_Downsample_w_interpol_linear_subj 009_stim nat004.bmp_y.csv'
-    #x = np.loadtxt(f"{folder1}/{folder2}/{filex}", delimiter=',')
-    #x = np.transpose(x)
-    #trial.x = x[1]
-    #print(trial.x[:10])
-    #y = np.loadtxt(f"{folder1}/{folder2}/{filey}", delimiter=',')
-    #y = np.transpose(y)
-    #trial.y = y[1]
-    #print(trial.y[:10])
-    #trial.timestep = x[0]
-    #new_hz = 500               #!WICHTIG
+    '''
+    stim = '0113.jpg'
+    subj = 'JV'
+    folder1 = 'Downsample_Comparison'
+    folder2 = f'FIFA_1000Hz_subj {subj}_stim {stim}'
+    fileL = f'FIFA_1000Hz_to_30Hz_Downsample_w_interpol_linear_subj ID {subj}_stim {stim}.csv'
+    fileC = f'FIFA_1000Hz_to_30Hz_Downsample_w_interpol_cubic_subj ID {subj}_stim {stim}.csv'
+    fileO = f'FIFA_1000Hz_to_30Hz_Downsample_wo_interpol_subj ID {subj}_stim {stim}.csv'
+    
+    x = np.loadtxt(f"{folder1}/{folder2}/{fileL}", delimiter=',', skiprows=1)
+    x = np.transpose(x)
+    trial.timestep = x[0]
+    trial.x = x[1]
+    trial.y = x[2]
+    new_hz = 1000               #!WICHTIG, ETRA: 500, FIFA: 1000, MIT: 250
+    '''
     ########################################
 
     step = 1000/new_hz                                     
@@ -163,20 +186,16 @@ def upsample(trial, new_hz, old_hz):
         max_timestep = trial['timestep'].iloc[-1]
     new_timesteps = np.arange(0, max_timestep, step)
 
-    interpol_values_x = interp1d(trial.timestep, trial.x.reshape(1, -1), kind='cubic')(new_timesteps).reshape(-1)
-    interpol_values_y = interp1d(trial.timestep, trial.y.reshape(1, -1), kind='cubic')(new_timesteps).reshape(-1)
+    interpol_values_x = interp1d(trial.timestep, trial.x.reshape(1, -1), kind='linear')(new_timesteps).reshape(-1)
+    interpol_values_y = interp1d(trial.timestep, trial.y.reshape(1, -1), kind='linear')(new_timesteps).reshape(-1)
     # 1000Hz -> 1200Hz: 0    1    2 ... 2018 2019 2020 -> 0.00000000e+00 8.33333333e-01 1.66666667e+00 ... 2.01750000e+03 2.01833333e+03 2.01916667e+03
     # length: 2021 -> 2424
     trial.timestep = new_timesteps                                       
     trial.x = interpol_values_x                                                         #(2877,) 
     trial.y = interpol_values_y  
-    # trial.timestep[40] = 33.33 -> value: 0.47371575 -> old value at timestep 33.33 = 0.47320688
-    # last value new: 0.76853863, old: 0.76855228    
     
-    #np.savetxt(f"ETRA_30Hz_wIntLin_to_500Hz_Upsample_w_interpol_cubic_subj 009_stim nat004.bmp_x.csv", list(zip(trial['timestep'], trial['x'])), delimiter=',')
-    #np.savetxt(f"ETRA_30Hz_wIntLin_to_500Hz_Upsample_w_interpol_cubic_subj 009_stim nat004.bmp_y.csv", list(zip(trial['timestep'], trial['y'])), delimiter=',')
-     
-    
+    #np.savetxt(f"FIFA_30Hz_wIntLin_to_1000Hz_Upsample_w_interpol_linear_subj ID {subj}_stim {stim}.csv", list(zip(trial['timestep'], trial['x'], trial['y'])), delimiter=',', header='t,x,y', comments = '')
+    #exit()
     '''
     #print(old_hz)
     df = pd.DataFrame(new_timesteps, columns= ['vals'])            
@@ -185,7 +204,6 @@ def upsample(trial, new_hz, old_hz):
     newHz = (1/diff) * 1000
     print(newHz)
     '''
-    #exit()
     
     return trial
 
@@ -200,8 +218,8 @@ def upsample_between_timestamp_pairs(trial, new_hz, old_hz, new_points, step):
             between_points.append(i)
     
     between_points = np.array(between_points, dtype=int)
-    interpol_values_x = interp1d(trial.timestep, trial.x.reshape(1, -1), kind='cubic')(between_points).reshape(-1)
-    interpol_values_y = interp1d(trial.timestep, trial.y.reshape(1, -1), kind='cubic')(between_points).reshape(-1)
+    interpol_values_x = interp1d(trial.timestep, trial.x.reshape(1, -1), kind='linear')(between_points).reshape(-1)
+    interpol_values_y = interp1d(trial.timestep, trial.y.reshape(1, -1), kind='linear')(between_points).reshape(-1)
     '''
     print('point pair ', pointpair)
     print('interpol x ', interpol_values_x)

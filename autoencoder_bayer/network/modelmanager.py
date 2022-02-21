@@ -82,11 +82,12 @@ class ModelManager:
 
         #save params in extra file
         params = {
-            "pos or vel"    : run_identifier,#args.signal_type,               
+            "signal_type"   : run_identifier,#args.signal_type,               
             "lr"            : args.learning_rate,
             "hz"            : args.hz,
             "viewing time"  : args.viewing_time,
             "bs"            : args.batch_size,      #I added
+            "slice-time-windows": args.slice_time_windows,
             "last loss"     : list(losses)[-1],     #before: losses[-1],
             "current day"   : date.today().strftime("%d.%m.%Y"),
             "current time"  : datetime.now().strftime("%H:%M:%S"),

@@ -1,0 +1,1 @@
+{"pos or vel": "vel", "lr": 0.0005, "hz": 1000, "viewing time": 2.0, "bs": 32, "last loss": "val", "current day": "15.02.2022", "current time": "17:41:25", "epoch losses": ["train", "val"], "epoch losses 100": ["train", "val"]}

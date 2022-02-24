@@ -8,6 +8,8 @@ import numpy as np
 from torch import manual_seed, nn, device, cuda, multiprocessing
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
+import matplotlib.pyplot as plt
+import pandas as pd
 
 from data import get_corpora
 from data.data import SignalDataset
@@ -148,6 +150,28 @@ class Trainer:
         
         return stop
 
+    def batch_to_color(self, batch, name):
+        ''' 
+        #Without split 
+        batch_old = pd.DataFrame(batch.reshape(20,-1).numpy())
+        plt.matshow(batch_old)
+        plt.colorbar()
+        plt.show()
+        '''
+        fig, axs = plt.subplots(2)
+        #shape (2,500) -> x/vel_x: (1,500) y/vel_y: (1,500)
+        x = pd.DataFrame(batch[0,:].reshape(-1,50).numpy())
+        y = pd.DataFrame(batch[1,:].reshape(-1,50).numpy())
+        
+        im1 = axs[0].matshow(x)
+        fig.colorbar(im1, ax = axs[0], orientation = 'vertical')
+        axs[0].set_title('x resp. vel_x', pad=30)
+        im2 = axs[1].matshow(y)
+        fig.colorbar(im2, ax = axs[1], orientation = 'vertical')
+        axs[1].set_title('y resp. vel_y', pad=30)
+        
+        plt.savefig(f"{name}.png")
+        
 
     def train(self, args, run_identifier):      
         print('################################# Start Training')
@@ -184,7 +208,9 @@ class Trainer:
                     counter_100 +=1
 
                     np.savetxt(f"original-batch-train", sample.numpy())
+                    self.batch_to_color(sample, f"original-batch-train")
                     np.savetxt(f"reconstructed-batch-train", sample_rec.detach().numpy())
+                    self.batch_to_color(sample_rec.detach(), f"reconstructed-batch-train")
                 '''
                 if b == 2:
                     break
@@ -199,8 +225,11 @@ class Trainer:
             for b, batch in enumerate(tqdm(self.val_dataloader, desc = 'Val Batches')):
                 # In forward NN also calcs & saves the loss 
                 sample_v, sample_rec_v = self.forward(batch) 
+                print('val batch ', b)
                 np.savetxt(f"original-batch-val", sample_v.numpy())
+                self.batch_to_color(sample_v, f"original-batch-val")
                 np.savetxt(f"reconstructed-batch-val", sample_rec_v.detach().numpy())
+                self.batch_to_color(sample_rec_v.detach(), f"reconstructed-batch-val")
                 
                 #self.tensorboard.add_scalar('val loss', current_val_loss, e*len(self.val_dataloader) + b)
                 '''

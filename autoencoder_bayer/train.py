@@ -6,6 +6,7 @@ from datetime import datetime
 
 import numpy as np
 from torch import manual_seed, nn, device, cuda, multiprocessing
+import torch
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 import matplotlib.pyplot as plt
@@ -171,6 +172,11 @@ class Trainer:
         axs[1].set_title('y resp. vel_y', pad=30)
         
         plt.savefig(f"{name}.png")
+
+    def batch_diff_to_color(self, original, rec, name):
+        diff = torch.subtract(original, rec)
+
+        self.batch_to_color(torch.abs(diff), f'diff_{name}')
         
 
     def train(self, args, run_identifier):      
@@ -211,6 +217,7 @@ class Trainer:
                     self.batch_to_color(sample, f"original-batch-train")
                     np.savetxt(f"reconstructed-batch-train", sample_rec.detach().numpy())
                     self.batch_to_color(sample_rec.detach(), f"reconstructed-batch-train")
+                    self.batch_diff_to_color(sample, sample_rec.detach(), 'train')
                 '''
                 if b == 2:
                     break
@@ -230,6 +237,7 @@ class Trainer:
                 self.batch_to_color(sample_v, f"original-batch-val")
                 np.savetxt(f"reconstructed-batch-val", sample_rec_v.detach().numpy())
                 self.batch_to_color(sample_rec_v.detach(), f"reconstructed-batch-val")
+                self.batch_diff_to_color(sample_v, sample_rec_v.detach(), 'val')
                 
                 #self.tensorboard.add_scalar('val loss', current_val_loss, e*len(self.val_dataloader) + b)
                 '''

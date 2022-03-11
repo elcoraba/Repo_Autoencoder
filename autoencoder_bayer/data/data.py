@@ -69,11 +69,15 @@ class SignalDataset(Dataset):
             if self.split_to_val:
                 train, val = train_test_split(
                     corpus_samples, test_size=0.2, random_state=RAND_SEED)      # test_size was 50
+                print('Size train set ', len(train), ' ', 'Size val set ', len(val))
+
             else:
                 train, val = corpus_samples, []
 
-            self.train_set.extend(train)
+            self.train_set.extend(train)            #train or val look as follows: MIT-LowRes|4427
             self.val_set.extend(val)
+            # To get the values of df for evaluation
+            #self.new_data = self.new_data.extend(train).extend(val)
 
         if len(self.val_set) > 0:
             self.val_set = SignalDataset_Val(self.val_set,
@@ -82,12 +86,14 @@ class SignalDataset(Dataset):
                                              self.signal_type)
 
         logging.info('\nDataset class initialized from {}.'.format(caller))
-        logging.info('Hz: {}. View Time (s): {}'.format(
-            args.hz, self.viewing_time))
+        #logging.info('Hz: {}. View Time (s): {}'.format(
+        #    args.hz, self.viewing_time))
         logging.info('Signal type: {}'.format(self.signal_type))
         logging.info('Normalize: {}'.format(self.normalize))
         logging.info('Training samples: {}'.format(len(self.train_set)))
         logging.info('Validation samples: {}'.format(len(self.val_set)))
+
+        #self.new_data = {}
 
     def _get_signal(self, df):
         if self.signal_type == 'vel':
@@ -114,16 +120,18 @@ class SignalDataset(Dataset):
         return signal
 
     def __getitem__(self, i):
-        corpus, idx = self.train_set[i].split('|') # TODO schneller?
+        corpus, idx = self.train_set[i].split('|') # MIT-LowRes|2227 
+
         data = self.corpora[corpus].data
 
         if type(data) == pd.DataFrame:
             signal = data.iloc[int(idx)][self.input_column]
         else:  # saved time slices
-            signal = data[int(idx)]
+            signal = data[int(idx)] # e.g. data[603]
+            # We did normalization before in preprocess(), so shouldn't do it here again!
             if self.normalize and self.signal_type != 'vel':
                 signal = self.normalize_sample(signal)
-
+        
         return signal.T
 
     def __len__(self):

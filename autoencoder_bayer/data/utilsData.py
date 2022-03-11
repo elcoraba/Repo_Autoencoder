@@ -22,9 +22,10 @@ def listdir(directory):
             if not f.startswith('.')]
 
 
-def pad(num_gaze_points, sample):
+def pad(num_gaze_points, sample):   
     sample = np.array(sample)
-    num_zeros = num_gaze_points - len(sample)
+    # Sybille: Problem, sometimes len(sample) was longer than num_gaze_points(hz * viewing time), then num_zeros was negative and we couldn't pad
+    num_zeros = num_gaze_points - len(sample[:num_gaze_points])
     return np.pad(sample,
                   ((0, num_zeros), (0, 0)),
                   constant_values=0)
@@ -244,7 +245,6 @@ def upsample_between_timestamp_pairs(trial, new_hz, old_hz, new_points, step):
                                                                 #print(trial.timestep[1640:1656])
     #print('SORTED ', trial.timestep[-20:])
     #print('is trial timestep sorted AFTER sort', np.all(np.diff(trial.timestep) >= 0))
-    print('###################################################################')
     return trial
 
     '''

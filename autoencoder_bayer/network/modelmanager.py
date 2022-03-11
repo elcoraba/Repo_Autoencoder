@@ -20,6 +20,7 @@ class ModelManager:
     def load_network(self, args):
         # if we want to load network
         if args.model_pos or args.model_vel:# is string empty or not, name des models e.g. #pos-i3738
+            print('Load network')
             if self.is_training:
                 self.network, self.optim = self._load_pretrained_model(args.model_pos or args.model_vel)
             else: #evaluation
@@ -32,13 +33,14 @@ class ModelManager:
                     self.network['pos'] = pos_net.eval()
         # erstelle network
         else:
+            print('Create network')
             self.network = Autoencoder(args)
 
             self.optim = torch.optim.Adam(self.network.parameters(),
                                           lr=args.learning_rate)
             # Shows structure of Network - add it later again
             #self._log(self.network)
-            print('log network')
+            
 
     def _load_pretrained_model(self, model_name):
         if not model_name:
@@ -69,7 +71,7 @@ class ModelManager:
 
     # wird in train aufgerufen
     def save(self, e, run_identifier, losses, losses_100, name_run, args): 
-        model_filename = '../models/' + run_identifier + '-e' + str(e) + '-hz' + str(args.hz) #pos-i3738, i = iteration
+        model_filename = '../models/' + args.signal_type + '-e' + str(e) + '-hz' + str(args.hz) #pos-i3738, i = iteration
         torch.save(
             {
                 'epoch': e,
@@ -82,7 +84,8 @@ class ModelManager:
 
         #save params in extra file
         params = {
-            "signal_type"   : run_identifier,#args.signal_type,               
+            "run_identifier": run_identifier,
+            "signal_type"   : args.signal_type,               
             "lr"            : args.learning_rate,
             "hz"            : args.hz,
             "viewing time"  : args.viewing_time,

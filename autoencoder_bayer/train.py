@@ -15,9 +15,9 @@ import pandas as pd
 from data import get_corpora
 from data.data import SignalDataset
 from network.modelmanager import ModelManager
-#from evaluate import *
-#from evals.classification_tasks import *
-#from evals.utils import *
+from evaluate import *
+from evals.classification_tasks import *
+from evals.utils import *
 from settings import *
 
 from tqdm import tqdm
@@ -27,7 +27,7 @@ manual_seed(RAND_SEED)
 
 
 class Trainer:
-    def __init__(self, args):
+    def __init__(self, args, run_identifier):
         self.model = ModelManager(args)
 
         self.save_model = args.save_model
@@ -44,9 +44,11 @@ class Trainer:
         self.tensorboard_train = SummaryWriter(f"runs/{self.name_run}_trainLoss")
         self.tensorboard_val = SummaryWriter(f"runs/{self.name_run}_valLoss")
 
+        self.run_identifier = run_identifier
         self._load_data(args)
         self._init_loss_fn(args)
         #self._init_evaluator()
+        self._init_evaluator(args)
 
     def _load_data(self, args):
         #TODO get_corpora: just add Datasets, which are higher than the given hz freq (args.hz)
@@ -75,12 +77,15 @@ class Trainer:
         #TODO: do back? for what? self._loss_types.append('rec')
         self.loss_fn = nn.MSELoss(reduction='none')
 
-    """
-    def _init_evaluator(self):
+    
+    def _init_evaluator(self, args):
+        print('################################################################################################')
+        print('##################################Init evaluator################################################')
+        print('################################################################################################')
         # for logging out this run
-        _rep_name = '{}{}-hz:{}-s:{}'.format(
-            run_identifier, 'mse',
-            self.dataset.hz, self.dataset.signal_type)
+        #_rep_name = '{}{}-hz_{}-s_{}'.format(
+        #    self.run_identifier, 'mse',
+        #    self.dataset.hz, self.dataset.signal_type)
 
         self.evaluator = RepresentationEvaluator(
             tasks=[Biometrics_EMVIC(), ETRAStimuli(),
@@ -92,16 +97,19 @@ class Trainer:
             # is using manipulated trials (sliced, transformed, etc.)
             dataset=(self.dataset if not args.slice_time_windows
                      else None),
-            representation_name=_rep_name,
+            representation_name=self.name_run, # was _rep_name
             # to evaluate on whole viewing time
             viewing_time=-1)
 
         if args.tensorboard:
-            self.tensorboard = SummaryWriter(
-                'tensorboard_runs/{}'.format(_rep_name))
+            self.tensorboard_acc_train = SummaryWriter(
+                'runs_accuracy/train/{}_acc'.format(self.name_run)) #_rep_name
+            self.tensorboard_acc_val = SummaryWriter(
+                'runs_accuracy/val/{}_acc'.format(self.name_run))
         else:
-            self.tensorboard = None
-    """
+            self.tensorboard_acc_train = None
+            self.tensorboard_acc_val = None
+    
 
     #saves loss every 100 batches
     def reset_running_loss_100(self):
@@ -246,6 +254,14 @@ class Trainer:
                 '''
             self.log(e, 'val')
 
+            #evaluation
+            if (e + 1) %10 == 0: #TODO 10
+                print('---------------------Evaluation---------------------')
+                self.evaluate_representation(sample, sample_rec, e, self.tensorboard_acc_train) #TODO e * length(self.dataloader)?
+                self.evaluate_representation(sample_v, sample_rec_v, e, self.tensorboard_acc_val)
+
+                
+            self.log(e, 'val')
             t.set_postfix(loss = (self.global_losses['train']['total'][e], self.global_losses['val']['total'][e])) # print losses in tqdm bar
             # Save Model every epoch
             if self.save_model:
@@ -289,32 +305,33 @@ class Trainer:
         rand_idx = np.random.randint(0, batch.shape[0])
         return batch[rand_idx].cpu(), reconstructed_batch[rand_idx].cpu()
 
-    '''
-    def evaluate_representation(self, sample, sample_rec, i):
+    
+    def evaluate_representation(self, sample, sample_rec, i, tensorboard_acc):
         if sample is not None:
             viz = visualize_reconstruction(
                 sample, sample_rec,
-                filename='{}-{}'.format(run_identifier, i),
-                loss_func=self.rec_loss,
-                title='[{}] [i={}] vl={:.2f} vrl={:.2f}'.format(
-                    self.rec_loss, i, self.epoch_losses['val']['total'],
-                    self.epoch_losses['val']['rec']),
-                savefig=False if self.tensorboard else True)
+                filename='{}-{}'.format(self.name_run, i),
+                #loss_func=self.rec_loss,
+                title='visualize reconstruction', #'[{}] [i={}] vl={:.2f} vrl={:.2f}'.format(
+                    #self.rec_loss, i, self.epoch_losses['val']['total'],
+                    #self.epoch_losses['val']['rec']),
+                savefig=False if tensorboard_acc else True, 
+                folder_name = 'train' if tensorboard_acc == self.tensorboard_acc_train else 'val')
 
-            if self.tensorboard:
-                self.tensorboard.add_figure('e_{}'.format(i),
+            if tensorboard_acc:
+                tensorboard_acc.add_figure('e_{}'.format(i),
                                             figure=viz,
                                             global_step=i)
 
         self.evaluator.extract_representations(i, log_stats=True)
         scores = self.evaluator.evaluate(i)
-        if self.tensorboard:
+        if tensorboard_acc:
             for task, classifiers in scores.items():
                 for classifier, acc in classifiers.items():
-                    self.tensorboard.add_scalar(
+                    tensorboard_acc.add_scalar(
                         '{}_{}_acc'.format(task, classifier), acc, i)
     
-    '''
+    
     def log(self, e, dset):
         def get_mean_losses():
             try:
@@ -352,7 +369,8 @@ class Trainer:
 
 def main():
     args = get_parser().parse_args()
-    run_identifier = args.signal_type                   #TODO datetime.now().strftime('%m%d-%H%M')
+    
+    run_identifier = 'TODO_run_identifier' #TODO        #TODO datetime.now().strftime('%m%d-%H%M')
     """
     setup_logging(args, run_identifier)
     print_settings()
@@ -363,7 +381,7 @@ def main():
     
     multiprocessing.freeze_support()
 
-    trainer = Trainer(args)
+    trainer = Trainer(args, run_identifier)
     trainer.train(args, run_identifier)
 
 if __name__ == "__main__":

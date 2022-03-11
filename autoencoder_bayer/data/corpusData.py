@@ -112,8 +112,12 @@ class EyeTrackingCorpus:
             #print('In preprocess')
             # trim to specified viewing time
             # no trim happens when self.slice_time_windows
+
             trial.x = trial.x[:sample_limit]
             trial.y = trial.y[:sample_limit]
+            # Needed to be added, because of evaluation.py. Because len(trial['timestep']) != len(trial['x']) would happen as with evaluation, sample_limit is not None
+            # First: vt = 0, sample limit = None        Second/Evaluation: vt = 2, sample limit = 2000
+            trial.timestep = trial.timestep[:sample_limit] #New 
             
             #--------
             # always convert blinks (negative values) to Nan
@@ -313,7 +317,7 @@ class EyeTrackingCorpus:
                 #np.savetxt(f"FIFA_holes_subj {trial['subj']}_stim {trial['stim']}_y.csv", list(zip(trial['timestep'], trial['y'])), delimiter=',')
                 #exit()
 
-            print('Adapt sampl.freq. ', 'subj: ', trial.subj, 'stim: ', trial.stim)
+            #print('Adapt sampl.freq. ', 'subj: ', trial.subj, 'stim: ', trial.stim)
             trial = du.upsample_between_timestamp_pairs(trial, self.effective_hz, self.hz, point_pairs, self.step) 
 
             #if trial['subj'] == 'DA' and trial['stim'] == '0034.jpg' or trial['subj'] == 'DA' and trial['stim'] == '0126.jpg' or trial['subj'] == 'DA' and trial['stim'] == '0164.jpg' or trial['subj'] == 'DA' and trial['stim'] == '0200.jpg' or trial['subj'] == 'DA' and trial['stim'] == '0219.jpg' or trial['subj'] == 'TS' and trial['stim'] == '0050.jpg' or trial['subj'] == 'TS' and trial['stim'] == '0122.jpg' or trial['subj'] == 'TS' and trial['stim'] == '0150.jpg' or trial['subj'] == 'WS' and trial['stim'] == '0065.jpg' or trial['subj'] == 'WS' and trial['stim'] == '0066.jpg' or trial['subj'] == 'WS' and trial['stim'] == '0077.jpg' or trial['subj'] == 'WS' and trial['stim'] == '0085.jpg' or trial['subj'] == 'WS' and trial['stim'] == '0117.jpg':
